@@ -100,6 +100,7 @@ class MasterForm(StatesGroup):
     exp_bucket = State()
     exp_text = State()
     portfolio = State()
+    references = State()
     verify_offer = State()
     consent = State()
     passport_info = State()
@@ -2181,8 +2182,26 @@ async def mf_portfolio(m: Message, state: FSMContext):
     if m.text and m.text.strip() == "❌ Отмена":
         await cancel_master_registration(m, state)
         return
-    
+
     await state.update_data(portfolio=m.text.strip())
+
+    await m.answer(
+        "Укажите контакты 2–3 клиентов для рекомендаций (или напишите «нет»):",
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[[KeyboardButton(text="❌ Отмена")]],
+            resize_keyboard=True,
+            one_time_keyboard=False
+        )
+    )
+    await state.set_state(MasterForm.references)
+
+@dp.message(MasterForm.references)
+async def mf_references(m: Message, state: FSMContext):
+    if m.text and m.text.strip() == "❌ Отмена":
+        await cancel_master_registration(m, state)
+        return
+
+    await state.update_data(references=m.text.strip())
 
     d = await state.get_data()
     # НЕ авто-категоризируем — оставляем выбранные пользователем
@@ -2200,7 +2219,7 @@ async def mf_portfolio(m: Message, state: FSMContext):
     await m.answer(
         f"Категория/Категории: {cats_selected or '—'}\n"
         "Сейчас ваш статус: <b>Кандидат</b>.\n"
-        "Хотите пройти более детальную проверку и получить статус <b>Проверенный</b>?",
+        "Хотите пройти дополнительную проверку документов и получить статус <b>Проверенный</b>?",
         reply_markup=kb
     )
     await state.set_state(MasterForm.verify_offer)
@@ -2211,12 +2230,12 @@ async def mf_verify_no(c: CallbackQuery, state: FSMContext):
     cats_auto = d.get("categories_auto","")
     skill_tier = "Новичок"  # 0 выполненных заказов
     result = db.execute("""
-        INSERT INTO masters(fio,contact,phone,exp_bucket,exp_text,portfolio,
+        INSERT INTO masters(fio,contact,phone,exp_bucket,exp_text,portfolio,references,
                             level,verified,has_npd_ip,categories_auto,orders_completed,skill_tier,
                             free_orders_left,is_active)
-        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,1)
+        VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
     """, (d["fio"], d["uid"], d.get("phone",""), d.get("exp_bucket",""), d.get("exp_text",""),
-            d.get("portfolio",""), "Кандидат", 0, 0, cats_auto, 0, skill_tier, FREE_ORDERS_START))
+            d.get("portfolio",""), d.get("references",""), "Кандидат", 0, 0, cats_auto, 0, skill_tier, FREE_ORDERS_START))
     mid = result.lastrowid if result else None
 
     await notify_admin(admin_master_card(mid))
@@ -2320,17 +2339,19 @@ async def mf_face_photo(m: Message, state: FSMContext):
     cats_auto = d.get("categories_auto","")
     skill_tier = calc_skill_tier(0)
     result = db.execute("""
-      INSERT INTO masters(fio, contact, phone, exp_bucket, exp_text, portfolio,
+      INSERT INTO masters(fio, contact, phone, exp_bucket, exp_text, portfolio, references,
                           level, verified, has_npd_ip, passport_scan_file_id, face_photo_file_id,
                           categories_auto, orders_completed, skill_tier, free_orders_left, is_active)
-      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
+      VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
     """, (
         d["fio"], d["uid"], d.get("phone",""), d.get("exp_bucket",""), d.get("exp_text",""),
-        d.get("portfolio",""), "Проверенный", 1, 0,
+        d.get("portfolio",""), d.get("references",""), "Проверенный", 1, 0,
         d.get("passport_scan_file_id",""), d.get("face_photo_file_id",""),
         cats_auto, 0, skill_tier, FREE_ORDERS_START
     ))
     mid = result.lastrowid if result else None
+
+    await notify_admin(admin_master_card(mid))
 
     # предложим апгрейд до Верифицированного (НПД/ИП)
     kb = InlineKeyboardMarkup(inline_keyboard=[[

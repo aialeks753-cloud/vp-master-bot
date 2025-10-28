@@ -106,7 +106,8 @@ for col, ddl in [
     ("priority_until", "DATETIME"),
     ("pin_until", "DATETIME"),
     ("contact", "TEXT"),   # на случай, если раньше не было
-    ("fio", "TEXT")        # и это тоже
+    ("fio", "TEXT"),       # и это тоже
+    ("references", "TEXT") # контакты клиентов для рекомендаций
 ]:
     ensure_column("masters", col, ddl)
 
