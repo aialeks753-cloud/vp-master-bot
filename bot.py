@@ -988,7 +988,8 @@ async def process_rating(c: CallbackQuery, state: FSMContext):
             INSERT INTO reviews (request_id, master_id, client_id, rating)
             VALUES (?, ?, ?, ?)
         """, (request_id, master_id, str(c.from_user.id), rating))
-        
+        db.commit()
+
         # Обновляем статистику мастера
         await update_master_stats(master_id)
         
@@ -1981,6 +1982,7 @@ async def req_submit(c: CallbackQuery, state: FSMContext):
         (d["name"], d["contact"], d["category"], d["district"], d["description"], d["when_text"], "new", client_user_id)
     )
     rid = result.lastrowid if result else None
+    db.commit()
 
     # уведомление админу
     await notify_admin(
@@ -2237,6 +2239,7 @@ async def mf_verify_no(c: CallbackQuery, state: FSMContext):
     """, (d["fio"], d["uid"], d.get("phone",""), d.get("exp_bucket",""), d.get("exp_text",""),
             d.get("portfolio",""), d.get("references",""), "Кандидат", 0, 0, cats_auto, 0, skill_tier, FREE_ORDERS_START))
     mid = result.lastrowid if result else None
+    db.commit()
 
     await notify_admin(admin_master_card(mid))
 
@@ -2350,6 +2353,7 @@ async def mf_face_photo(m: Message, state: FSMContext):
         cats_auto, 0, skill_tier, FREE_ORDERS_START
     ))
     mid = result.lastrowid if result else None
+    db.commit()
 
     await notify_admin(admin_master_card(mid))
 
@@ -2616,6 +2620,7 @@ async def send_to_masters(request_id: int, category: str, district: str):
             ]
         ])
         db.execute("INSERT INTO offers(request_id, master_id, status) VALUES(?,?, 'sent')", (request_id, mid))
+        db.commit()
         try:
             chat_id = int(contact)  # в анкете мы сохранили user_id мастера в contact
         except:
@@ -2766,6 +2771,7 @@ async def comp_text(m: Message, state: FSMContext):
             d = await state.get_data()
             db.execute("INSERT INTO complaints(who,order_id,master_id,text) VALUES(?,?,?,?)",
                       (d["who"], d["order_id"], d["master_id"], m.text.strip()))
+            db.commit()
             await notify_admin(f"🚨 Жалоба: {json.dumps(d, ensure_ascii=False)}")
             await m.answer("✅ Жалоба отправлена. Мы свяжемся с вами.", reply_markup=main_menu_kb(str(c.from_user.id)))
             await state.clear()
