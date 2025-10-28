@@ -2226,7 +2226,7 @@ async def mf_references(m: Message, state: FSMContext):
     )
     await state.set_state(MasterForm.verify_offer)
 
-@dp.callback_query(MasterForm.verify_offer, F.data.endswith("no"))
+@dp.callback_query(MasterForm.verify_offer, F.data == "mf:verify:no")
 async def mf_verify_no(c: CallbackQuery, state: FSMContext):
     d = await state.get_data()
     cats_auto = d.get("categories_auto","")
@@ -2257,7 +2257,7 @@ async def mf_verify_no(c: CallbackQuery, state: FSMContext):
     await state.clear()
     await c.answer()
 
-@dp.callback_query(MasterForm.verify_offer, F.data.endswith("yes"))
+@dp.callback_query(MasterForm.verify_offer, F.data == "mf:verify:yes")
 async def mf_verify_yes(c: CallbackQuery, state: FSMContext):
     # Текст заявления
     statement = (
