@@ -2023,7 +2023,6 @@ async def go_master(c: CallbackQuery, state: FSMContext):
     await state.set_state(MasterForm.fio)
     await c.answer()
 
-@dp.message(MasterForm.fio)
 async def cancel_master_registration(m: Message, state: FSMContext):
     """Универсальная отмена регистрации мастера"""
     await state.clear()
@@ -2034,6 +2033,7 @@ async def cancel_master_registration(m: Message, state: FSMContext):
     )
     await m.answer("Главное меню:", reply_markup=main_menu_kb(str(m.from_user.id)))
 
+@dp.message(MasterForm.fio)
 async def mf_fio(m: Message, state: FSMContext):
     if m.text and m.text.strip() == "❌ Отмена":
         await cancel_master_registration(m, state)
