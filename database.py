@@ -39,6 +39,11 @@ class DatabaseManager:
         cur = self.execute(query, params)
         return cur.fetchall() if cur else []
     
+    def commit(self):
+        """Коммит текущей транзакции"""
+        if self.conn:
+            self.conn.commit()
+
     def close(self):
         """Закрытие соединения"""
         if self.conn:

@@ -2232,7 +2232,7 @@ async def mf_verify_no(c: CallbackQuery, state: FSMContext):
     cats_auto = d.get("categories_auto","")
     skill_tier = "Новичок"  # 0 выполненных заказов
     result = db.execute("""
-        INSERT INTO masters(fio,contact,phone,exp_bucket,exp_text,portfolio,references,
+        INSERT INTO masters(fio,contact,phone,exp_bucket,exp_text,portfolio,`references`,
                             level,verified,has_npd_ip,categories_auto,orders_completed,skill_tier,
                             free_orders_left,is_active)
         VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
@@ -2342,7 +2342,7 @@ async def mf_face_photo(m: Message, state: FSMContext):
     cats_auto = d.get("categories_auto","")
     skill_tier = calc_skill_tier(0)
     result = db.execute("""
-      INSERT INTO masters(fio, contact, phone, exp_bucket, exp_text, portfolio, references,
+      INSERT INTO masters(fio, contact, phone, exp_bucket, exp_text, portfolio, `references`,
                           level, verified, has_npd_ip, passport_scan_file_id, face_photo_file_id,
                           categories_auto, orders_completed, skill_tier, free_orders_left, is_active)
       VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
