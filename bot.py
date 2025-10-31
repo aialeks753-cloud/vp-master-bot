@@ -290,8 +290,8 @@ def admin_master_card(mid: int) -> str:
     contact = row['contact'] or '—'
     phone = row['phone'] or '—'
     level = row['level'] or '—'
-    verified = row['verified'] or '—'
-    has_npd_ip = row['has_npd_ip'] or '—'
+    verified = row['verified']
+    has_npd_ip = row['has_npd_ip']
     cats_auto = row['categories_auto'] or '—'
     exp_bucket = row['exp_bucket'] or '—'
     exp_text = row['exp_text'] or '—'
