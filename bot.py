@@ -297,9 +297,9 @@ def admin_master_card(mid: int) -> str:
     exp_text = row['exp_text'] or '—'
     portfolio = row['portfolio'] or '—'
     inn = row['inn'] or '—'
-    
-    verified_txt = "Да" if verified else "Нет"
-    npd_txt = "Да" if has_npd_ip else "Нет"
+
+    verified_txt = "Да" if verified == 1 else "Нет"
+    npd_txt = "Да" if has_npd_ip == 1 else "Нет"
     return (
         f"🧾 Анкета мастера #{mid}\n"
         f"👤 {fio or '—'}\n"
@@ -2178,6 +2178,25 @@ async def mf_exp_text(m: Message, state: FSMContext):
         )
     )
     await state.set_state(MasterForm.portfolio)
+
+@dp.message(MasterForm.portfolio, F.photo)
+async def mf_portfolio_photo(m: Message, state: FSMContext):
+    if m.text and m.text.strip() == "❌ Отмена":
+        await cancel_master_registration(m, state)
+        return
+
+    # Сохраняем file_id первого фото
+    await state.update_data(portfolio_file_id=m.photo[0].file_id)
+
+    await m.answer(
+        "Укажите контакты 2–3 клиентов для рекомендаций (или напишите «нет»):",
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=[[KeyboardButton(text="❌ Отмена")]],
+            resize_keyboard=True,
+            one_time_keyboard=False
+        )
+    )
+    await state.set_state(MasterForm.references)
 
 @dp.message(MasterForm.portfolio)
 async def mf_portfolio(m: Message, state: FSMContext):
